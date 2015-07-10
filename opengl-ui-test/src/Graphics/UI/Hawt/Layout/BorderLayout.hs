@@ -27,30 +27,26 @@ data BorderLayout = BorderLayout {  _center :: Widget,
                                     _right :: Widget }
 makeLenses ''BorderLayout
 
+instance IsWidgetState BorderLayout where
+    prefStateSize state = (preferredWidth, preferredHeight)
+        where
+            preferredWidth = (state^.center^.preferredSize^._1) + (state^.left^.preferredSize._1) + (state^.right^.preferredSize._1)
+            preferredHeight = (state^.center^.preferredSize._2) + (state^.top^.preferredSize._2) + (state^.bottom^.preferredSize._2)
+    renderState state = renderLayout state
+    notifyState panel event = panel
+
 borderLayout :: Widget -> Widget -> Widget -> Widget -> Widget -> Widget
 borderLayout center top bottom left right =
-    Widget (renderLayout (BorderLayout center top bottom left right)) (preferredWidth, preferredHeight)
-    where
-        preferredWidth = (center^.preferredSize^._1) + (left^.preferredSize._1) + (right^.preferredSize._1)
-        preferredHeight = (center^.preferredSize._2) + (top^.preferredSize._2) + (bottom^.preferredSize._2)
+    makeStateWidget $ BorderLayout center top bottom left right
 
 
-renderLayout :: BorderLayout -> GL.GLfloat -> GL.GLfloat -> IO Widget
+renderLayout :: BorderLayout -> GL.GLfloat -> GL.GLfloat -> IO ()
 renderLayout bl width height = do
-    GL.preservingMatrix $ do
-        _render (bl^.bottom) width hBottom
-    GL.preservingMatrix $ do
-        GL.translate $ GL.Vector3 0.0 (height - hTop) 0.0
-        _render (bl^.top) width hTop
-    GL.preservingMatrix $ do
-        GL.translate $ GL.Vector3 0.0 hBottom 0.0
-        _render (bl^.left) wLeft (height - hBottom - hTop)
-    GL.preservingMatrix $ do
-        GL.translate $ GL.Vector3 (width - wRight) hBottom 0.0
-        _render (bl^.right) wRight (height - hBottom - hTop)
-    GL.preservingMatrix $ do
-        GL.translate $ GL.Vector3 wLeft hBottom 0.0
-        _render (bl^.center) (width - wLeft - wRight) (height - hBottom - hTop)
+    renderChild (bl^.bottom) 0.0 0.0 width hBottom
+    renderChild (bl^.top) 0.0 (height - hTop) width hTop
+    renderChild (bl^.left) 0.0 hBottom wLeft (height - hBottom - hTop)
+    renderChild (bl^.right) (width - wRight) hBottom wRight (height - hBottom - hTop)
+    renderChild (bl^.center) wLeft hBottom (width - wLeft - wRight) (height - hBottom - hTop)
     where
         hBottom = bl^.bottom^.preferredSize._2
         hTop = bl^.top^.preferredSize._2

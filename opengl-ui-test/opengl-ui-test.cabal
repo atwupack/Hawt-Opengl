@@ -8,12 +8,14 @@ description:
 data-dir: ""
  
 executable opengl-ui-test
-    build-depends: GLUT -any, OpenGL -any, base -any, lens -any
+    build-depends: FTGL -any, GLUT -any, OpenGL -any, base -any,
+                   lens -any
     main-is: Main.hs
     buildable: True
     default-language: Haskell2010
     hs-source-dirs: src
     other-modules: Graphics.UI.Hawt.Widget
-                   Graphics.UI.Hawt.Widget.Panel Graphics.UI.Hawt.Layout.BorderLayout
+                   Graphics.UI.Hawt.Widget.Panel Graphics.UI.Hawt.Widget.Label
+                   Graphics.UI.Hawt.Layout.BorderLayout
  
  

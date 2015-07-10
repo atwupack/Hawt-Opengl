@@ -6,6 +6,7 @@ import Control.Lens
 
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Widget.Panel
+import Graphics.UI.Hawt.Widget.Label
 import Graphics.UI.Hawt.Layout.BorderLayout
 
 -- Callback for reshapeCallback
@@ -15,9 +16,12 @@ resizeGLScene size@(Size width height) = do
     viewport $= (Position 0 0, size)
     matrixMode $= Projection
     loadIdentity
-    ortho2D 0.0 (fromIntegral width) 0.0 (fromIntegral height)
+    ortho2D 0.0 (fromIntegral (width-1)) 0.0 (fromIntegral (height-1))
     matrixMode $= Modelview 0
 
+
+buildSimpleUI :: Widget
+buildSimpleUI = emptyPanel (Color4 1.0 0.0 0.0 1.0)
 
 -- Build a dummy UI
 buildUI :: Widget
@@ -33,21 +37,36 @@ buildUI = borderLayout
     (emptyPanel $ Color4 0.0 1.0 0.0 1.0)
     (emptyPanel $ Color4 0.0 0.0 1.0 1.0)
     (emptyPanel $ Color4 1.0 1.0 0.0 1.0)
-    (emptyPanel $ Color4 1.0 0.0 1.0 1.0)
+    (panel
+        (Color4 1.0 0.0 1.0 1.0)
+        (label "Hallo" "c:\\Projekte\\arial.ttf" (Color4 1.0 1.0 1.0 1.0)))
 
 -- Callback for displayCallback
-drawGLScene :: Widget -> IO ()
-drawGLScene widget = do
+drawGLScene :: IORef Widget -> IO ()
+drawGLScene widgetState = do
+    print "Hallo"
+    widget <- readIORef widgetState
+    let
+        pWidth = widget^.preferredSize._1
+        pHeight = widget^.preferredSize._2
+        yTranslate = pHeight
     clear [ColorBuffer, DepthBuffer]
     loadIdentity
     Size width height <- get windowSize
     translate $ Vector3 0.0 (minimum [(fromIntegral height)-pHeight,0.0]) 0.0
-    _render widget (maximum [pWidth,(fromIntegral width)]) (maximum [pHeight,(fromIntegral height)])
+    (widget^.render) (maximum [pWidth,(fromIntegral width)]) (maximum [pHeight,(fromIntegral height)])
     swapBuffers
-    where
-        pWidth = widget^.preferredSize._1
-        pHeight = widget^.preferredSize._2
-        yTranslate = pHeight
+
+notifyMouseEvent :: IORef Widget -> MouseButton -> KeyState -> Position -> IO ()
+notifyMouseEvent widgetState button state (Position x y) = do
+    widget <- readIORef widgetState
+    Size width height <- get windowSize
+    let
+        newWidget = (widget^.notify) $ MouseMoved (fromIntegral x) (fromIntegral (height-y))
+    writeIORef widgetState newWidget
+
+
+
 
 createGLWindow :: String -> GLsizei -> GLsizei -> IO ()
 createGLWindow windowTitle width height = do
@@ -70,8 +89,11 @@ main = do
     getArgsAndInitialize
     createGLWindow "Test" 1000 600
     initGL
-    displayCallback $= drawGLScene buildUI
+    newWidget <- newIORef buildUI
+    --newWidget <- newIORef buildSimpleUI
+    displayCallback $= drawGLScene newWidget
     reshapeCallback $= Just resizeGLScene
+    mouseCallback $= Just (notifyMouseEvent newWidget)
     mainLoop
 
 
