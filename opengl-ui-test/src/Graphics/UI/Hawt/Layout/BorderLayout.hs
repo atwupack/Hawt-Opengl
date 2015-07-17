@@ -11,44 +11,47 @@
 -- |
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+
 module Graphics.UI.Hawt.Layout.BorderLayout (
     borderLayout
 ) where
 
 import Graphics.UI.Hawt.Widget
 import qualified Graphics.Rendering.OpenGL as GL
-import Control.Lens
+import Prelude hiding (init)
 
-data BorderLayout = BorderLayout {  _center :: Widget,
-                                    _top :: Widget,
-                                    _bottom :: Widget,
-                                    _left :: Widget,
-                                    _right :: Widget }
-makeLenses ''BorderLayout
+data BorderLayout = BorderLayout {  center :: Widget,
+                                    top :: Widget,
+                                    bottom :: Widget,
+                                    left :: Widget,
+                                    right :: Widget }
 
 instance IsWidgetState BorderLayout where
     prefStateSize state = (preferredWidth, preferredHeight)
         where
-            preferredWidth = (state^.center^.preferredSize^._1) + (state^.left^.preferredSize._1) + (state^.right^.preferredSize._1)
-            preferredHeight = (state^.center^.preferredSize._2) + (state^.top^.preferredSize._2) + (state^.bottom^.preferredSize._2)
-    renderState state = renderLayout state
-    notifyState panel event = panel
+            preferredWidth = (fst.prefSize.center) state + (fst.prefSize.left) state + (fst.prefSize.right) state
+            preferredHeight = (snd.prefSize.center) state + (snd.prefSize.top) state + (snd.prefSize.bottom) state
+    renderState = renderLayout
+    notifyState bl event = bl
+    initState = initLayout
 
 borderLayout :: Widget -> Widget -> Widget -> Widget -> Widget -> Widget
 borderLayout center top bottom left right =
     makeStateWidget $ BorderLayout center top bottom left right
 
+initLayout :: BorderLayout -> IO BorderLayout
+initLayout (BorderLayout c t b l r) = BorderLayout <$> init c <*> init t <*> init b <*> init l <*> init r
+
 
 renderLayout :: BorderLayout -> GL.GLfloat -> GL.GLfloat -> IO ()
 renderLayout bl width height = do
-    renderChild (bl^.bottom) 0.0 0.0 width hBottom
-    renderChild (bl^.top) 0.0 (height - hTop) width hTop
-    renderChild (bl^.left) 0.0 hBottom wLeft (height - hBottom - hTop)
-    renderChild (bl^.right) (width - wRight) hBottom wRight (height - hBottom - hTop)
-    renderChild (bl^.center) wLeft hBottom (width - wLeft - wRight) (height - hBottom - hTop)
+    renderChild (bottom bl) 0.0 0.0 width hBottom
+    renderChild (top bl) 0.0 (height - hTop) width hTop
+    renderChild (left bl) 0.0 hBottom wLeft (height - hBottom - hTop)
+    renderChild (right bl) (width - wRight) hBottom wRight (height - hBottom - hTop)
+    renderChild (center bl) wLeft hBottom (width - wLeft - wRight) (height - hBottom - hTop)
     where
-        hBottom = bl^.bottom^.preferredSize._2
-        hTop = bl^.top^.preferredSize._2
-        wLeft = bl^.left^.preferredSize._1
-        wRight = bl^.right^.preferredSize._1
+        hBottom =  snd.prefSize.bottom $ bl
+        hTop = snd.prefSize.top $ bl
+        wLeft = fst.prefSize.left $ bl
+        wRight = fst.prefSize.right $ bl
