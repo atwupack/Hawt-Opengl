@@ -18,6 +18,7 @@ module Graphics.UI.Hawt.Widget.Button (
 
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Widget.Label
+import Graphics.UI.Hawt.Drawing
 import Graphics.Rendering.OpenGL as GL
 import Prelude hiding (init)
 
@@ -37,29 +38,24 @@ button text lcolor = makeStateWidget $ Button blabel lcolor
     where
         blabel = label text "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0)
 
-renderButton :: Button -> GLfloat -> GLfloat -> IO ()
+renderButton :: Button -> GLfloat -> GLfloat -> RenderC
 renderButton (Button {blabel, bcolor}) width height = do
-        GL.color $ Color3 0.0 0.0 (0.0 :: GLfloat)
-        GL.renderPrimitive GL.Quads $ do
-            GL.vertex $ GL.Vertex2 0 (0 :: GL.GLfloat)
-            GL.vertex $ GL.Vertex2 width 0
-            GL.vertex $ GL.Vertex2 width height
-            GL.vertex $ GL.Vertex2 0 height
-        GL.renderPrimitive GL.Quads $ do
-            GL.color bcolor
-            GL.vertex $ GL.Vertex2 2.0 (2.0 :: GL.GLfloat)
-            GL.color $ darker bcolor
-            GL.vertex $ GL.Vertex2 (width-2.0) 2.0
-            GL.color bcolor
-            GL.vertex $ GL.Vertex2 (width-2.0) (height-2.0)
-            GL.color $ lighter bcolor
-            GL.vertex $ GL.Vertex2 2.0 (height-2.0)
-        renderChild blabel lx ly lw lh
-        where
-            lx = (width - lw) / 2.0
-            ly = (height - lh) / 2.0
-            lw = fst.prefSize $ blabel
-            lh = snd.prefSize $ blabel
+    renderBox (Color3 0 0 (0::GLfloat)) 0 0 width height
+    gl $ GL.renderPrimitive GL.Quads $ do
+        GL.color bcolor
+        GL.vertex $ GL.Vertex2 2.0 (2.0 :: GL.GLfloat)
+        GL.color $ darker bcolor
+        GL.vertex $ GL.Vertex2 (width-2.0) 2.0
+        GL.color bcolor
+        GL.vertex $ GL.Vertex2 (width-2.0) (height-2.0)
+        GL.color $ lighter bcolor
+        GL.vertex $ GL.Vertex2 2.0 (height-2.0)
+    renderChild blabel lx ly lw lh
+    where
+        lx = (width - lw) / 2.0
+        ly = (height - lh) / 2.0
+        lw = fst.prefSize $ blabel
+        lh = snd.prefSize $ blabel
 
 lighter :: Color4 GLfloat -> Color4 GLfloat
 lighter (Color4 r g b a) = Color4 (lc r) (lc g) (lc b) a

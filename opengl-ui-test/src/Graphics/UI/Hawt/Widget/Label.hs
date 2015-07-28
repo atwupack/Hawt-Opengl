@@ -18,6 +18,7 @@ module Graphics.UI.Hawt.Widget.Label (
 
 import Graphics.Rendering.OpenGL.GL
 import Graphics.UI.Hawt.Widget
+import Graphics.UI.Hawt.Drawing
 import Graphics.Rendering.FTGL as FTGL
 
 data Label = Label { text :: String, fontpath :: String, lcolor :: Color4 GLfloat}
@@ -45,10 +46,10 @@ initLabel (Label text font lcolor) = do
     return $ InitLabel text loadedfont lcolor (realToFrac (urx-llx), asc+desc)
 initLabel l@InitLabel {} = return l
 
-renderLabel :: Label -> GLfloat -> GLfloat -> IO ()
+renderLabel :: Label -> GLfloat -> GLfloat -> RenderC
 renderLabel (InitLabel t f c s) width height = do
     lighting $= Disabled
-    preservingMatrix $ do
+    gl $ preservingMatrix $ do
         color c
         [llx,lly,llz,urx,ury,urz] <- getFontBBox f t
         let

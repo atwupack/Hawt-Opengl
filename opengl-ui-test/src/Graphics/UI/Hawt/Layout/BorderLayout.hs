@@ -17,6 +17,7 @@ module Graphics.UI.Hawt.Layout.BorderLayout (
 ) where
 
 import Graphics.UI.Hawt.Widget
+import Graphics.UI.Hawt.Drawing
 import qualified Graphics.Rendering.OpenGL as GL
 import Prelude hiding (init)
 
@@ -43,7 +44,7 @@ initLayout :: BorderLayout -> IO BorderLayout
 initLayout (BorderLayout c t b l r) = BorderLayout <$> init c <*> init t <*> init b <*> init l <*> init r
 
 
-renderLayout :: BorderLayout -> GL.GLfloat -> GL.GLfloat -> IO ()
+renderLayout :: BorderLayout -> GL.GLfloat -> GL.GLfloat -> RenderC
 renderLayout bl width height = do
     renderChild (bottom bl) 0.0 0.0 width hBottom
     renderChild (top bl) 0.0 (height - hTop) width hTop

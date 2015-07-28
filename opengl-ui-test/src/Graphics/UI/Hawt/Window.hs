@@ -19,7 +19,10 @@ module Graphics.UI.Hawt.Window (
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT hiding (Window)
 import Graphics.UI.Hawt.Widget
+import Graphics.UI.Hawt.Drawing
 import Data.IORef
+
+import Control.Monad.Trans.Reader
 
 import Prelude hiding (init, show)
 
@@ -34,7 +37,7 @@ show (Window title content) = do
     initGL
     root <- init content
     newWidget <- newIORef root
-    displayCallback $= drawGLScene newWidget
+    displayCallback $= drawGLScene newWidget newContext
     reshapeCallback $= Just (resizeGLScene newWidget)
     mouseCallback $= Just (notifyMouseEvent newWidget)
     mainLoop
@@ -76,8 +79,8 @@ createGLWindow windowTitle width height = do
     actionOnWindowClose $= MainLoopReturns
 
 -- Callback for displayCallback
-drawGLScene :: IORef Widget -> IO ()
-drawGLScene widgetState = do
+drawGLScene :: IORef Widget -> RenderContext -> IO ()
+drawGLScene widgetState context = do
     --print "Hallo"
     widget <- readIORef widgetState
     let
@@ -88,5 +91,5 @@ drawGLScene widgetState = do
     loadIdentity
     Size width height <- get windowSize
     translate $ Vector3 0.0 (minimum [fromIntegral height-pHeight,0.0]) 0.0
-    render widget (maximum [pWidth,fromIntegral width]) (maximum [pHeight,fromIntegral height])
+    runReaderT (render widget (maximum [pWidth,fromIntegral width]) (maximum [pHeight,fromIntegral height])) context
     swapBuffers
