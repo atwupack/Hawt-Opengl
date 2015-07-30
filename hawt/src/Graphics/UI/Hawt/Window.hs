@@ -11,15 +11,15 @@
 -- |
 --
 -----------------------------------------------------------------------------
-
+{-# LANGUAGE TypeFamilies #-}
 module Graphics.UI.Hawt.Window (
     window, show
 ) where
 
 import Graphics.Rendering.OpenGL
-import Graphics.UI.GLUT hiding (Window)
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Drawing
+import Graphics.UI.Hawt.Backend
 import Data.IORef
 
 import Control.Monad.Trans.Reader
@@ -31,35 +31,24 @@ data Window = Window { title :: String, content :: Widget }
 window :: String -> Widget -> Window
 window = Window
 
-show :: Window -> IO ()
-show (Window title content) = do
-    createGLWindow title 1000 600
+show :: (UIBackend a) => a -> Window -> IO ()
+show be (Window title content) = do
+    Just w <- createWindow be title 1000 600
     initGL
     root <- init content
     newWidget <- newIORef root
-    displayCallback $= drawGLScene newWidget newContext
-    reshapeCallback $= Just (resizeGLScene newWidget)
-    mouseCallback $= Just (notifyMouseEvent newWidget)
-    mainLoop
-
-notifyMouseEvent :: IORef Widget -> MouseButton -> KeyState -> Position -> IO ()
-notifyMouseEvent widgetState button state (Position x y) = do
-    widget <- readIORef widgetState
-    Size width height <- get windowSize
-    let
-        newWidget = notify widget $ MouseMoved (fromIntegral x) (fromIntegral (height-y))
-    writeIORef widgetState newWidget
-
+    setResizeCallback w resizeGLScene
+    setDisplayCallback w $ drawGLScene w newWidget newContext
+    runMainLoop w
 
 -- Callback for reshapeCallback
-resizeGLScene :: IORef Widget -> Size -> IO ()
-resizeGLScene widget size@(Size width height) = do
-    viewport $= (Position 0 0, size)
+resizeGLScene :: Int -> Int -> IO ()
+resizeGLScene width height = do
+    viewport $= (Position 0 0, Size (fromIntegral width) (fromIntegral height))
     matrixMode $= Projection
     loadIdentity
     ortho2D 0.0 (fromIntegral (width-1)) 0.0 (fromIntegral (height-1))
     matrixMode $= Modelview 0
-
 
 initGL :: IO ()
 initGL = do
@@ -69,18 +58,11 @@ initGL = do
     depthFunc $= Just Lequal
     hint PerspectiveCorrection $= Nicest
 
-createGLWindow :: String -> GLsizei -> GLsizei -> IO ()
-createGLWindow windowTitle width height = do
-    initialDisplayMode $= [DoubleBuffered, RGBAMode,
-        WithDepthBuffer,WithStencilBuffer, WithAlphaComponent]
-    createWindow windowTitle
-    perWindowKeyRepeat $= PerWindowKeyRepeatOff
-    windowSize $= Size width height
-    actionOnWindowClose $= MainLoopReturns
+
 
 -- Callback for displayCallback
-drawGLScene :: IORef Widget -> RenderContext -> IO ()
-drawGLScene widgetState context = do
+drawGLScene :: (UIBackend a) => WindowH a -> IORef Widget -> RenderContext -> IO ()
+drawGLScene window widgetState context = do
     --print "Hallo"
     widget <- readIORef widgetState
     let
@@ -89,7 +71,7 @@ drawGLScene widgetState context = do
         yTranslate = pHeight
     clear [ColorBuffer, DepthBuffer]
     loadIdentity
-    Size width height <- get windowSize
+    (width, height) <- getWindowSize window
     translate $ Vector3 0.0 (minimum [fromIntegral height-pHeight,0.0]) 0.0
     runReaderT (render widget (maximum [pWidth,fromIntegral width]) (maximum [pHeight,fromIntegral height])) context
-    swapBuffers
+    swapBuffers window

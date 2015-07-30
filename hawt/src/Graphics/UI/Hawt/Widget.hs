@@ -21,10 +21,10 @@ module Graphics.UI.Hawt.Widget (
 ) where
 
 import Graphics.Rendering.OpenGL
-import Graphics.Rendering.OpenGL.Raw
 import Control.Applicative
 import Prelude hiding (init)
 import Graphics.UI.Hawt.Drawing
+import Control.Monad.Trans.Reader
 
 data UIEvent = MouseMoved GLfloat GLfloat
 
@@ -107,8 +107,7 @@ initIntW state = makeStateWidget <$> initState state
 
 renderChild :: Widget -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> RenderC
 renderChild child x y width height = do
-        gl $ do
-            glPushMatrix
-            translate $ Vector3 x y 0.0
-        render child width height
-        gl glPopMatrix
+    c <- ask
+    gl $ preservingMatrix $ do
+        translate $ Vector3 x y 0.0
+        runReaderT (render child width height) c

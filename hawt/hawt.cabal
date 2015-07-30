@@ -1,0 +1,26 @@
+name: hawt
+version: 0.0.1
+cabal-version: 1.12
+build-type: Simple
+license: AllRightsReserved
+description:
+     
+
+library
+    exposed-modules:
+        Graphics.UI.Hawt.Backend
+        Graphics.UI.Hawt.Drawing
+        Graphics.UI.Hawt.Layout.BorderLayout
+        Graphics.UI.Hawt.Layout.BoxLayout
+        Graphics.UI.Hawt.Widget
+        Graphics.UI.Hawt.Widget.Button
+        Graphics.UI.Hawt.Widget.Label
+        Graphics.UI.Hawt.Widget.Panel
+        Graphics.UI.Hawt.Window
+    build-depends:
+        FTGL -any,
+        OpenGL -any,
+        base -any,
+        transformers -any
+    hs-source-dirs: src
+

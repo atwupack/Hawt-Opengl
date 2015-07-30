@@ -1,13 +1,17 @@
-import Graphics.UI.GLUT
+
 import Graphics.UI.Hawt.Window
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Widget.Panel
 import Graphics.UI.Hawt.Widget.Button
 import Graphics.UI.Hawt.Widget.Label
 import Graphics.UI.Hawt.Layout.BorderLayout
+import Graphics.UI.Hawt.Backend.GLUT
+import Graphics.UI.Hawt.Backend.GLFW
+import Graphics.UI.Hawt.Backend
+
+import Graphics.Rendering.OpenGL
+
 import Prelude hiding (init, show)
-
-
 
 -- Build a dummy UI
 buildUI :: Widget
@@ -28,7 +32,8 @@ buildUI = borderLayout
         +> label "Hello" "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0))
 
 main = do
-    getArgsAndInitialize
-    show $ window "Test" buildUI
+    --be <- initBackend :: IO GLUTBackend
+    be <- initBackend :: IO GLFWBackend
+    show be $ window "Test" buildUI
 
 
