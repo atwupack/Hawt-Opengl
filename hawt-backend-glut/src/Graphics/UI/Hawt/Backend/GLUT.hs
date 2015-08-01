@@ -28,14 +28,12 @@ instance UIBackend GLUTBackend where
         getArgsAndInitialize
         return GLUTBackend
     createWindow GLUTBackend windowTitle width height  = do
-        initialDisplayMode $= [DoubleBuffered, RGBAMode,
-            WithDepthBuffer,WithStencilBuffer, WithAlphaComponent]
+        initialDisplayMode $= [DoubleBuffered, RGBAMode, WithAlphaComponent]
         wh <- GLUT.createWindow windowTitle
         perWindowKeyRepeat $= PerWindowKeyRepeatOff
         windowSize $= Size (fromIntegral width) (fromIntegral height)
         actionOnWindowClose $= MainLoopReturns
         return $ Just (GLUTWindow wh)
-    setResizeCallback window callback = reshapeCallback $= Just (reshapeInt callback)
     setDisplayCallback window callback = displayCallback $= callback
     swapBuffers window = GLUT.swapBuffers
     getWindowSize window = do
@@ -43,5 +41,3 @@ instance UIBackend GLUTBackend where
         return (fromIntegral width, fromIntegral height)
     runMainLoop be = GLUT.mainLoop
 
-reshapeInt :: ResizeCallback -> ReshapeCallback
-reshapeInt resizeCallback (Size width height) = resizeCallback (fromIntegral width) (fromIntegral height)

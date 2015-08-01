@@ -30,22 +30,24 @@ instance UIBackend GLFWBackend where
     createWindow GLFWBackend windowTitle width height  = do
         --initialDisplayMode $= [DoubleBuffered, RGBAMode,
         --    WithDepthBuffer,WithStencilBuffer, WithAlphaComponent]
+        --windowHint $ WindowHint'sRGBCapable True
+        defaultWindowHints
         wh <- GLFW.createWindow width height windowTitle Nothing Nothing
         --perWindowKeyRepeat $= PerWindowKeyRepeatOff
         -- actionOnWindowClose $= MainLoopReturns
         return $ GLFWWindow <$> wh
-    setResizeCallback (GLFWWindow window) callback = setWindowSizeCallback window (Just (reshapeInt callback))
     setDisplayCallback (GLFWWindow window) callback = setWindowRefreshCallback window (Just (refreshInt callback))
     swapBuffers (GLFWWindow window) = GLFW.swapBuffers window
     getWindowSize (GLFWWindow window) = GLFW.getWindowSize window
     runMainLoop (GLFWWindow window) = mainLoopGLFW window
 
-reshapeInt :: ResizeCallback -> WindowSizeCallback
-reshapeInt resizeCallback window = resizeCallback
-
 refreshInt :: DisplayCallback -> WindowRefreshCallback
 refreshInt refreshCallback window = refreshCallback
 
 mainLoopGLFW :: Window -> IO ()
-mainLoopGLFW window = whileM_ (windowShouldClose window) waitEvents
-
+mainLoopGLFW window = do
+    makeContextCurrent $ Just window
+    swapInterval 1
+    whileM_ (not <$> windowShouldClose window) waitEvents
+    destroyWindow window
+    terminate

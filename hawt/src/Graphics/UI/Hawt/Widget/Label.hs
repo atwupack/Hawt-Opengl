@@ -37,13 +37,14 @@ label text font c = makeStateWidget $ Label text font c
 
 initLabel :: Label -> IO Label
 initLabel (Label text font lcolor) = do
-    loadedfont <- createTextureFont font
+    --loadedfont <- createTextureFont font
+    loadedfont <- createPixmapFont font
     setFontFaceSize loadedfont 14 72
     [llx,lly,llz,urx,ury,urz] <- getFontBBox loadedfont text
     let
         asc = realToFrac $ getFontAscender loadedfont
         desc = realToFrac $ getFontDescender loadedfont
-    return $ InitLabel text loadedfont lcolor (realToFrac (urx-llx), asc+desc)
+    return $ InitLabel text loadedfont lcolor (realToFrac urx, asc+desc)
 initLabel l@InitLabel {} = return l
 
 renderLabel :: Label -> GLfloat -> GLfloat -> RenderC
@@ -51,10 +52,10 @@ renderLabel (InitLabel t f c s) width height = do
     lighting $= Disabled
     gl $ preservingMatrix $ do
         color c
-        [llx,lly,llz,urx,ury,urz] <- getFontBBox f t
         let
             asc = getFontAscender f
             desc = getFontDescender f
-        translate $ Vector3 (-(realToFrac llx)) (height-realToFrac asc) 0.0
+        rasterPos $ Vertex2 0.0 (height-realToFrac asc)
         renderFont f t FTGL.All
 renderLabel (Label t f c) width height = error "Not initialized font"
+

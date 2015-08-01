@@ -37,7 +37,6 @@ show be (Window title content) = do
     initGL
     root <- init content
     newWidget <- newIORef root
-    setResizeCallback w resizeGLScene
     setDisplayCallback w $ drawGLScene w newWidget newContext
     runMainLoop w
 
@@ -47,7 +46,7 @@ resizeGLScene width height = do
     viewport $= (Position 0 0, Size (fromIntegral width) (fromIntegral height))
     matrixMode $= Projection
     loadIdentity
-    ortho2D 0.0 (fromIntegral (width-1)) 0.0 (fromIntegral (height-1))
+    ortho2D 0.0 (fromIntegral width) 0.0 (fromIntegral height)
     matrixMode $= Modelview 0
 
 initGL :: IO ()
@@ -63,7 +62,8 @@ initGL = do
 -- Callback for displayCallback
 drawGLScene :: (UIBackend a) => WindowH a -> IORef Widget -> RenderContext -> IO ()
 drawGLScene window widgetState context = do
-    --print "Hallo"
+    (width, height) <- getWindowSize window
+    resizeGLScene width height
     widget <- readIORef widgetState
     let
         pWidth = fst.prefSize $ widget
@@ -71,7 +71,6 @@ drawGLScene window widgetState context = do
         yTranslate = pHeight
     clear [ColorBuffer, DepthBuffer]
     loadIdentity
-    (width, height) <- getWindowSize window
     translate $ Vector3 0.0 (minimum [fromIntegral height-pHeight,0.0]) 0.0
     runReaderT (render widget (maximum [pWidth,fromIntegral width]) (maximum [pHeight,fromIntegral height])) context
     swapBuffers window
