@@ -21,6 +21,7 @@ library
         FTGL -any,
         OpenGL -any,
         base -any,
+        reactive-banana -any,
         transformers -any
     hs-source-dirs: src
 

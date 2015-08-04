@@ -32,8 +32,8 @@ buildUI = borderLayout
         +> label "Hello" "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0))
 
 main = do
-    --be <- initBackend :: IO GLUTBackend
-    be <- initBackend :: IO GLFWBackend
+    be <- initBackend :: IO GLUTBackend
+    --be <- initBackend :: IO GLFWBackend
     show be $ window "Test" buildUI
 
 

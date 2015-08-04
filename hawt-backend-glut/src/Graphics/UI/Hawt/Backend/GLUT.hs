@@ -19,6 +19,9 @@ module Graphics.UI.Hawt.Backend.GLUT (
 
 import Graphics.UI.GLUT as GLUT
 import Graphics.UI.Hawt.Backend
+import Control.Event.Handler
+import Reactive.Banana
+
 
 data GLUTBackend = GLUTBackend
 
@@ -33,11 +36,19 @@ instance UIBackend GLUTBackend where
         perWindowKeyRepeat $= PerWindowKeyRepeatOff
         windowSize $= Size (fromIntegral width) (fromIntegral height)
         actionOnWindowClose $= MainLoopReturns
-        return $ Just (GLUTWindow wh)
-    setDisplayCallback window callback = displayCallback $= callback
+        ah <- createEvents wh
+        return $ Just (GLUTWindow wh, ah)
     swapBuffers window = GLUT.swapBuffers
     getWindowSize window = do
         Size width height <- get windowSize
         return (fromIntegral width, fromIntegral height)
     runMainLoop be = GLUT.mainLoop
 
+createEvents :: Window -> IO (AddHandler BackendEvent)
+createEvents w = do
+    (addHandler, fire) <- newAddHandler
+    displayCallback $= windowRefresh fire w
+    return addHandler
+
+windowRefresh :: Handler BackendEvent-> Window -> IO()
+windowRefresh fire w = fire RepaintEvent

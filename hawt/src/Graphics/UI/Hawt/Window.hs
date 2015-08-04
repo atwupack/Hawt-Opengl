@@ -11,7 +11,7 @@
 -- |
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, RankNTypes #-}
 module Graphics.UI.Hawt.Window (
     window, show
 ) where
@@ -21,6 +21,8 @@ import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Drawing
 import Graphics.UI.Hawt.Backend
 import Data.IORef
+import Reactive.Banana.Frameworks
+import Reactive.Banana
 
 import Control.Monad.Trans.Reader
 
@@ -33,11 +35,17 @@ window = Window
 
 show :: (UIBackend a) => a -> Window -> IO ()
 show be (Window title content) = do
-    Just w <- createWindow be title 1000 600
+    Just (w, ah) <- createWindow be title 1000 600
     initGL
     root <- init content
     newWidget <- newIORef root
-    setDisplayCallback w $ drawGLScene w newWidget newContext
+    let networkDescription :: forall t. Frameworks t => Moment t ()
+        networkDescription = do
+            backendEvent <- fromAddHandler ah
+            reactimate $ fmap (drawGLScene w newWidget newContext) backendEvent
+
+    network <- compile networkDescription
+    actuate network
     runMainLoop w
 
 -- Callback for reshapeCallback
@@ -60,8 +68,8 @@ initGL = do
 
 
 -- Callback for displayCallback
-drawGLScene :: (UIBackend a) => WindowH a -> IORef Widget -> RenderContext -> IO ()
-drawGLScene window widgetState context = do
+drawGLScene :: (UIBackend a) => WindowH a -> IORef Widget -> RenderContext-> BackendEvent -> IO ()
+drawGLScene window widgetState context event = do
     (width, height) <- getWindowSize window
     resizeGLScene width height
     widget <- readIORef widgetState
