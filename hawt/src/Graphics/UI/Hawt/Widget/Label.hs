@@ -13,10 +13,11 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE NamedFieldPuns #-}
 module Graphics.UI.Hawt.Widget.Label (
-    label
+    label, Label
 ) where
 
 import Graphics.Rendering.OpenGL.GL
+import Graphics.UI.Hawt
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Drawing
 import Graphics.Rendering.FTGL as FTGL
@@ -31,8 +32,8 @@ instance IsWidgetState Label where
     notifyState l event = l
     initState = initLabel
 
-label :: String -> String -> Color4 GLfloat -> Widget
-label text font c = makeStateWidget $ Label text font c
+label :: String -> String -> Color4 GLfloat -> UI Label
+label text font c = widget $ Label text font c
 
 
 initLabel :: Label -> IO Label

@@ -11,12 +11,12 @@
 -- |
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns, TypeFamilies #-}
 module Graphics.UI.Hawt.Widget (
 
     Widget, IsWidgetState(..), IsContainerState(..),
-    makeStateWidget, makeStateContainer, UIEvent(..), renderChild, (+>), render,
-    init, prefSize, notify
+    makeStateWidget, UIEvent(..), renderChild, render,
+    init, prefSize, notify, widget, UI(..), emptyWidget, (+>)
 
 ) where
 
@@ -25,43 +25,26 @@ import Control.Applicative
 import Prelude hiding (init)
 import Graphics.UI.Hawt.Drawing
 import Control.Monad.Trans.Reader
+import Graphics.UI.Hawt
+
+data UI a = UI a Widget
+
+widget :: (IsWidgetState a) => a -> UI a
+widget state = UI state $ makeStateWidget state
+
+emptyWidget :: Widget
+emptyWidget = Widget {render = renderE , prefSize=(0,0), notify=notifyE, init=return emptyWidget}
+    where
+        renderE w h = return ()
+        notifyE e = emptyWidget
 
 data UIEvent = MouseMoved GLfloat GLfloat
 
 
-data Widget =   Empty
-                | Widget {  renderW :: GLfloat -> GLfloat -> RenderC,
-                        prefSizeW :: (GLfloat, GLfloat),
-                        notifyW :: UIEvent -> Widget,
-                        initW :: IO Widget}
-                | Container {  renderC :: [Widget] -> GLfloat -> GLfloat -> RenderC,
-                        prefSizeC :: [Widget] -> (GLfloat, GLfloat),
-                        notifyC :: UIEvent -> Widget,
-                        initC :: IO Widget,
-                        children :: [Widget]}
-
-render :: Widget -> GLfloat -> GLfloat -> RenderC
-render Empty _ _ = return ()
-render Widget{renderW} w h = renderW w h
-render Container{renderC, children} w h = renderC children w h
-
-init :: Widget -> IO Widget
-init Widget{initW} = initW
-init c@Container{children} = do
-    newChildren <- mapM init children
-    newCont <- initC c
-    return newCont {children = newChildren}
-init Empty = return Empty
-
-prefSize :: Widget -> (GLfloat, GLfloat)
-prefSize Widget{prefSizeW} = prefSizeW
-prefSize Container{prefSizeC, children} = prefSizeC children
-prefSize Empty = (0,0)
-
-notify :: Widget -> UIEvent -> Widget
-notify Widget{notifyW} event = notifyW event
-notify Container{notifyC} event = notifyC event
-notify Empty event = Empty
+data Widget =   Widget { render :: GLfloat -> GLfloat -> RenderC,
+                        prefSize :: (GLfloat, GLfloat),
+                        notify :: UIEvent -> Widget,
+                        init :: IO Widget}
 
 class IsWidgetState a where
     renderState :: a -> GLfloat -> GLfloat -> RenderC
@@ -69,33 +52,17 @@ class IsWidgetState a where
     notifyState :: a -> UIEvent -> a
     initState :: a -> IO a
 
-class IsContainerState a where
-    renderStateC :: a -> [Widget] -> GLfloat -> GLfloat -> RenderC
-    prefStateSizeC :: a -> [Widget] -> (GLfloat, GLfloat)
-    notifyStateC :: a -> UIEvent -> a
-    initStateC :: a -> IO a
+class (IsWidgetState a) => IsContainerState a where
+    addChild :: a -> ChildType a -> Widget -> a
+    type ChildType a
 
-(+>) :: Widget -> Widget -> Widget
-(+>) p@Widget{} child = p
-(+>) p@Container{children=oldChildren} child = p { children = child : oldChildren }
-(+>) Empty child = Empty
+(+>) :: (IsContainerState a, IsWidgetState b) => UI a -> (ChildType a, UI b) -> UI a
+(+>) (UI p pw) (ct, (UI c cw)) = widget newParent
+    where
+        newParent = addChild p ct cw
 
 makeStateWidget :: (IsWidgetState a) => a -> Widget
 makeStateWidget state = Widget (renderState state) (prefStateSize state) (notifyIntW state) (initIntW state)
-
-makeStateContainer :: (IsContainerState a) => a -> [Widget] -> Widget
-makeStateContainer state children = Container (renderStateC state) (prefStateSizeC state) (notifyIntC state children) (initIntC state children) children
-
-notifyIntC :: (IsContainerState a) => a -> [Widget] -> UIEvent -> Widget
-notifyIntC state children event = makeStateContainer newState children
-    where
-        newState = notifyStateC state event
-
-initIntC :: (IsContainerState a) => a -> [Widget] -> IO Widget
-initIntC state children = do
-    newState <- initStateC state
-    return $ makeStateContainer newState children
-
 
 notifyIntW :: (IsWidgetState a) => a -> UIEvent -> Widget
 notifyIntW state event = makeStateWidget newState

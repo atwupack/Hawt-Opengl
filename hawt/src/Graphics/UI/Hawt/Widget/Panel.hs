@@ -11,41 +11,43 @@
 -- |
 --
 -----------------------------------------------------------------------------
-
+{-# LANGUAGE NamedFieldPuns, TypeFamilies #-}
 module Graphics.UI.Hawt.Widget.Panel (
-    panel
+    panel, PanelContent(..)
 ) where
 
 import qualified Graphics.Rendering.OpenGL as GL
 
+import Graphics.UI.Hawt
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Drawing
 import Prelude hiding (init)
 import Control.Arrow
 
-data Panel = Panel { color :: GL.Color4 GL.GLfloat}
+data Panel = Panel { color :: GL.Color4 GL.GLfloat, content :: Widget}
+data PanelContent = Content
+
+instance IsWidgetState Panel where
+    -- Nothing to initialize
+    initState Panel{color, content} = do
+        c <- init content
+        return $ Panel color c
+    renderState = renderPanel
+    -- Preferred size is max of all children.
+    prefStateSize Panel{content} = prefSize content
+    -- No state change on event.
+    notifyState p event = p
 
 instance IsContainerState Panel where
-    -- Nothing to initialize
-    initStateC = return
-    renderStateC = renderPanel
-    -- Preferred size is max of all children.
-    prefStateSizeC p = foldl cmax (0,0)
-        where
-            cmax (w,h) current = (max w *** max h)(prefSize current)
-    -- No state change on event.
-    notifyStateC p event = p
+    addChild p Content child = p{content=child}
+    type ChildType Panel = PanelContent
 
--- | Create a panel with the given color.
-panel :: GL.Color4 GL.GLfloat -> Widget
-panel color = makeStateContainer (Panel color) []
+-- | Create a panel with the given color and w/o content.
+panel :: GL.Color4 GL.GLfloat -> UI Panel
+panel color = widget $ Panel color emptyWidget
 
 
-renderPanel ::  Panel -> [Widget] -> GL.GLfloat -> GL.GLfloat -> RenderC
--- Render an empty panel with its color.
-renderPanel p@(Panel color) [] width height = renderBox color 0 0 width height
--- Render all the children.
-renderPanel p@(Panel color) children width height = do
-    renderPanel p [] width height
-    mapM_ (\c -> renderChild c 0.0 0.0 width height) children
-
+renderPanel ::  Panel -> GL.GLfloat -> GL.GLfloat -> RenderC
+renderPanel p@(Panel color content) width height = do
+    renderBox color 0 0 width height
+    renderChild content 0.0 0.0 width height

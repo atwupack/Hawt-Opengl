@@ -11,21 +11,23 @@
 -- |
 --
 -----------------------------------------------------------------------------
-
+{-# LANGUAGE NamedFieldPuns, TypeFamilies #-}
 module Graphics.UI.Hawt.Layout.BorderLayout (
-    borderLayout
+    borderLayout, BorderLayout, BLPosition(..)
 ) where
 
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Drawing
 import qualified Graphics.Rendering.OpenGL as GL
-import Prelude hiding (init)
+import Prelude hiding (init, Left, Right)
 
 data BorderLayout = BorderLayout {  center :: Widget,
                                     top :: Widget,
                                     bottom :: Widget,
                                     left :: Widget,
                                     right :: Widget }
+
+data BLPosition = Center | Left | Right | Top | Bottom
 
 instance IsWidgetState BorderLayout where
     prefStateSize state = (preferredWidth, preferredHeight)
@@ -36,13 +38,19 @@ instance IsWidgetState BorderLayout where
     notifyState bl event = bl
     initState = initLayout
 
-borderLayout :: Widget -> Widget -> Widget -> Widget -> Widget -> Widget
-borderLayout center top bottom left right =
-    makeStateWidget $ BorderLayout center top bottom left right
+instance IsContainerState BorderLayout where
+    type ChildType BorderLayout = BLPosition
+    addChild bl Center child = bl {center=child}
+    addChild bl Top child = bl {top=child}
+    addChild bl Bottom child = bl {bottom=child}
+    addChild bl Left child = bl {left=child}
+    addChild bl Right child = bl {right=child}
+
+borderLayout ::  UI BorderLayout
+borderLayout = widget $ BorderLayout emptyWidget emptyWidget emptyWidget emptyWidget emptyWidget
 
 initLayout :: BorderLayout -> IO BorderLayout
 initLayout (BorderLayout c t b l r) = BorderLayout <$> init c <*> init t <*> init b <*> init l <*> init r
-
 
 renderLayout :: BorderLayout -> GL.GLfloat -> GL.GLfloat -> RenderC
 renderLayout bl width height = do

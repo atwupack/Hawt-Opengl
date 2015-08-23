@@ -8,32 +8,30 @@ import Graphics.UI.Hawt.Layout.BorderLayout
 import Graphics.UI.Hawt.Backend.GLUT
 import Graphics.UI.Hawt.Backend.GLFW
 import Graphics.UI.Hawt.Backend
-
 import Graphics.Rendering.OpenGL
 
-import Prelude hiding (init, show)
+import Prelude hiding (init, show, Left, Right)
 
 -- Build a dummy UI
-buildUI :: Widget
+buildUI :: UI BorderLayout
 buildUI = borderLayout
-    (panel (Color4 1.0 0.0 0.0 1.0)
-        +> borderLayout
-            (panel (Color4 0.0 0.0 0.0 1.0)
-                +> button "Click me!" (Color4 0.7 0.7 0.7 1.0))
-            (panel $ Color4 0.2 0.2 0.2 1.0)
-            (panel $ Color4 0.4 0.4 0.4 1.0)
-            (panel $ Color4 0.6 0.6 0.6 1.0)
-            (panel $ Color4 0.8 0.8 0.8 1.0))
-    (panel $ Color4 0.0 1.0 0.0 1.0)
-    (panel $ Color4 0.0 0.0 1.0 1.0)
-    (panel (Color4 1.0 1.0 0.0 1.0)
-        +> label "goog" "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0))
-    (panel (Color4 1.0 0.0 1.0 1.0)
-        +> label "Hello" "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0))
+            +> (Center, panel (Color4 1.0 0.0 0.0 1.0)
+                +> (Content, borderLayout
+                    +> (Center, panel (Color4 0.0 0.0 0.0 1.0)
+                        +> (Content, button "Click me!" (Color4 0.7 0.7 0.7 1.0)))
+                    +> (Top, panel $ Color4 0.2 0.2 0.2 1.0)
+                    +> (Bottom, panel $ Color4 0.4 0.4 0.4 1.0)
+                    +> (Left, panel $ Color4 0.6 0.6 0.6 1.0)
+                    +> (Right, panel $ Color4 0.8 0.8 0.8 1.0)))
+            +> (Top, panel $ Color4 0.0 1.0 0.0 1.0)
+            +> (Bottom, panel $ Color4 0.0 0.0 1.0 1.0)
+            +> (Left, panel (Color4 1.0 1.0 0.0 1.0)
+                +> (Content, label "goog" "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0)))
+            +> (Right, panel (Color4 1.0 0.0 1.0 1.0)
+                +> (Content, label "Hello" "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0)))
 
+main :: IO()
 main = do
-    be <- initBackend :: IO GLUTBackend
-    --be <- initBackend :: IO GLFWBackend
+    --be <- initBackend :: IO GLUTBackend
+    be <- initBackend :: IO GLFWBackend
     show be $ window "Test" buildUI
-
-

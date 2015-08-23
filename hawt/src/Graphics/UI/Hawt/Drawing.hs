@@ -39,4 +39,3 @@ type RenderC = ReaderT RenderContext IO ()
 
 gl :: IO () -> RenderC
 gl = liftIO
-

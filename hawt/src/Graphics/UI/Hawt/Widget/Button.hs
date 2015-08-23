@@ -16,6 +16,7 @@ module Graphics.UI.Hawt.Widget.Button (
     button
 ) where
 
+import Graphics.UI.Hawt
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Widget.Label
 import Graphics.UI.Hawt.Drawing
@@ -33,10 +34,10 @@ instance IsWidgetState Button where
     notifyState b event = b
     initState Button{blabel, bcolor} = Button <$> init blabel <*> return bcolor
 
-button :: String -> Color4 GLfloat -> Widget
-button text lcolor = makeStateWidget $ Button blabel lcolor
+button :: String -> Color4 GLfloat -> UI Button
+button text lcolor = widget $ Button blabel lcolor
     where
-        blabel = label text "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0)
+        UI bls blabel = label text "c:\\Projekte\\arial.ttf" (Color4 0.0 0.0 0.0 1.0)
 
 renderButton :: Button -> GLfloat -> GLfloat -> RenderC
 renderButton (Button {blabel, bcolor}) width height = do

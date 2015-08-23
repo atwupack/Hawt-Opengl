@@ -3,11 +3,10 @@ version: 0.0.1
 cabal-version: 1.12
 build-type: Simple
 license: AllRightsReserved
-description:
-     
 
 library
     exposed-modules:
+        Graphics.UI.Hawt
         Graphics.UI.Hawt.Backend
         Graphics.UI.Hawt.Drawing
         Graphics.UI.Hawt.Layout.BorderLayout

@@ -22,7 +22,6 @@ import Graphics.UI.Hawt.Backend
 import Control.Event.Handler
 import Reactive.Banana
 
-
 data GLUTBackend = GLUTBackend
 
 instance UIBackend GLUTBackend where

@@ -30,8 +30,8 @@ import Prelude hiding (init, show)
 
 data Window = Window { title :: String, content :: Widget }
 
-window :: String -> Widget -> Window
-window = Window
+window :: String -> UI a -> Window
+window text (UI cs content) = Window text content
 
 show :: (UIBackend a) => a -> Window -> IO ()
 show be (Window title content) = do
