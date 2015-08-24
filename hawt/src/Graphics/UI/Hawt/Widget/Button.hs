@@ -16,6 +16,7 @@ module Graphics.UI.Hawt.Widget.Button (
     button
 ) where
 
+import Control.Applicative
 import Graphics.UI.Hawt
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Widget.Label
