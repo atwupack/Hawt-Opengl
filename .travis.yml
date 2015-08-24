@@ -4,6 +4,7 @@ sudo: required
 install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libftgl-dev
+  - sudo apt-get install -y libxxf86vm-dev
 script:
   - "cd hawt"
   - "cabal install --only-dependencies"
