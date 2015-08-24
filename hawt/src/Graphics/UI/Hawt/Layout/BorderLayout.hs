@@ -16,6 +16,7 @@ module Graphics.UI.Hawt.Layout.BorderLayout (
     borderLayout, BorderLayout, BLPosition(..)
 ) where
 
+import Control.Applicative
 import Graphics.UI.Hawt.Widget
 import Graphics.UI.Hawt.Drawing
 import qualified Graphics.Rendering.OpenGL as GL
