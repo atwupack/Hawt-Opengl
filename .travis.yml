@@ -7,7 +7,20 @@ before_install:
 install:
   - "cd hawt"
   - "cabal install --only-dependencies"
+  - cd "../hawt-backend-glfw"
+  - "cabal install --only-dependencies"
+  - cd "../hawt-backend-glut"
+  - "cabal install --only-dependencies"
+  - cd "../opengl-ui-test"
+  - "cabal install --only-dependencies"
 script:
+  - "cd hawt"
+  - "cabal configure && cabal build"
+  - cd "../hawt-backend-glfw"
+  - "cabal configure && cabal build"
+  - cd "../hawt-backend-glut"
+  - "cabal configure && cabal build"
+  - cd "../opengl-ui-test"
   - "cabal configure && cabal build"
 notifications:
   email: false
