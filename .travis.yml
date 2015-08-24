@@ -1,26 +1,21 @@
 language: haskell
 ghc: "7.8"
 sudo: required
-before_install:
+install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libftgl-dev
-install:
-  - "cd hawt"
-  - "cabal install --only-dependencies"
-  - cd "../hawt-backend-glfw"
-  - "cabal install --only-dependencies"
-  - cd "../hawt-backend-glut"
-  - "cabal install --only-dependencies"
-  - cd "../opengl-ui-test"
-  - "cabal install --only-dependencies"
 script:
   - "cd hawt"
-  - "cabal configure && cabal build"
+  - "cabal install --only-dependencies"
+  - "cabal configure && cabal build && cabal install"
   - cd "../hawt-backend-glfw"
-  - "cabal configure && cabal build"
+  - "cabal install --only-dependencies"
+  - "cabal configure && cabal build && cabal install"
   - cd "../hawt-backend-glut"
-  - "cabal configure && cabal build"
+  - "cabal install --only-dependencies"
+  - "cabal configure && cabal build && cabal install"
   - cd "../opengl-ui-test"
+  - "cabal install --only-dependencies"
   - "cabal configure && cabal build"
 notifications:
   email: false
