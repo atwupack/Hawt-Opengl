@@ -1,0 +1,9 @@
+language: haskell
+ghc: 7.10
+install:
+  - "cd hawt"
+  - "cabal install --only-dependencies"
+script:
+  - "cabal configure && cabal build"
+notifications:
+  email: false
